@@ -17,7 +17,43 @@ import paddle.v2 as paddle
 
 with_gpu = os.getenv('WITH_GPU', '0') != '0'
 
+def train_reader(data_dir, word_dict, label_dict):
+    """
+    Reader interface for training data
 
+    :param data_dir: data directory
+    :type data_dir: str
+    :param word_dict: path of word dictionary,
+        the dictionary must has a "UNK" in it.
+    :type word_dict: Python dict
+    :param label_dict: path of label dictionary.
+    :type label_dict: Python dict
+    """
+
+    def reader():
+        UNK_ID = word_dict['<unk>']
+        word_col = 1
+        lbl_col = 0
+
+        for file_name in os.listdir(data_dir):
+            file_path = os.path.join(data_dir, file_name)
+            if not os.path.isfile(file_path):
+                continue
+            with open(file_path, "r") as f:
+                for line in f:
+                    line_split = line.strip().split("\t")
+                    doc = line_split[word_col]
+                    doc_ids = []
+                    for sent in doc.strip().split("."):
+                        sent_ids = [
+                            word_dict.get(w, UNK_ID)
+                            for w in sent.split()]
+                        if sent_ids:
+                            doc_ids.append(sent_ids)
+
+                    yield doc_ids, label_dict[line_split[lbl_col]]
+
+    return reader
 def convolution_net(input_dim, class_dim=2, emb_dim=128, hid_dim=128):
     data = paddle.layer.data("word",
                              paddle.data_type.integer_value_sequence(input_dim))
