@@ -68,7 +68,14 @@ def convolution_net(input_dim, class_dim=2, emb_dim=128, hid_dim=128):
     cost = paddle.layer.classification_cost(input=output, label=lbl)
     return cost, output
 
-
+def load_word_dict(dict_path):
+    word_dict = {}
+    with open(dict_path,'r') as f:
+        for line in f:
+            line_split = line.strip().split("\t")
+            word_dict[line_split[0]] = line_split[1]
+    return word_dict
+    
 def stacked_lstm_net(input_dim,
                      class_dim=2,
                      emb_dim=128,
